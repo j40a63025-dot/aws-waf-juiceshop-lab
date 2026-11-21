@@ -1,3 +1,5 @@
+> **Portfolio demo (English):** [Run synthetic WAF telemetry locally](PORTFOLIO.md) with FastAPI, PostgreSQL, Docker, pytest, GitHub Actions and a separately validated Terraform logging configuration. No AWS account is needed for the demo. The original Spanish case study follows.
+
 # AWS WAF sobre OWASP Juice Shop — laboratorio de defensa en el borde
 
 > **Edición anonimizada.** Los identificadores son placeholders y las capturas originales se excluyeron. Consulte [SANITIZACION.md](SANITIZACION.md) antes de reutilizar los ejemplos.
