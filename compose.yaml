@@ -1,0 +1,34 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: telemetry
+      POSTGRES_DB: telemetry
+      POSTGRES_PASSWORD: synthetic-demo-only
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./telemetry/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "telemetry", "-d", "telemetry"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+  api:
+    build: ./telemetry
+    environment:
+      PGHOST: db
+      PGUSER: telemetry
+      PGDATABASE: telemetry
+      PGPASSWORD: synthetic-demo-only
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=2)"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+volumes:
+  db-data:
