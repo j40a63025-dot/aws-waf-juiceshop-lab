@@ -1,6 +1,6 @@
 # Edición pública anonimizada
 
-Se conservaron los dos documentos Markdown y se excluyeron las **18 capturas PNG originales**. Cada captura tiene una nota nueva en `capturas/`; los enlaces de los documentos apuntan a estas notas. No se incluyen imágenes, metadatos de imágenes ni mapas de valores originales.
+Se conservaron los dos documentos Markdown y se excluyeron las **18 capturas PNG originales**. El informe y la bitácora identifican las capturas omitidas. Esta edición pública conserva esas referencias como texto. No se incluyen imágenes, metadatos de imágenes ni mapas de valores originales.
 
 ## Qué se reemplazó
 

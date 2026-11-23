@@ -59,7 +59,7 @@ systemctl enable --now docker
 docker run -d --restart always -p 80:3000 bkimminich/juice-shop
 ```
 
-[Captura omitida por seguridad: Juice Shop respondiendo por HTTP directo](capturas/01-juiceshop-http-directo.md)
+*Captura omitida por seguridad: Juice Shop respondiendo por HTTP directo*
 
 **Notas de ejecución**
 
@@ -88,7 +88,7 @@ docker run -d --restart always -p 80:3000 bkimminich/juice-shop
 | Origin request policy | **AllViewer** |
 | Plan | Free |
 
-[Captura omitida por seguridad: Revisión previa a la creación](capturas/03-cloudfront-review-create.md)
+*Captura omitida por seguridad: Revisión previa a la creación*
 
 **Decisiones**
 
@@ -105,17 +105,17 @@ docker run -d --restart always -p 80:3000 bkimminich/juice-shop
 El asistente de creación incluye un paso **"Enable security"**. Con todos los toggles
 de reglas apagados, el resumen seguía marcando `Security protections: Enabled`.
 
-[Captura omitida por seguridad: Paso de seguridad del asistente](capturas/02-cloudfront-enable-security.md)
+*Captura omitida por seguridad: Paso de seguridad del asistente*
 
 Al entrar a editarlo después, **no existe ninguna opción para desactivarlo**: las
 protecciones van atadas al plan y solo se pueden ampliar, nunca apagar.
 
-[Captura omitida por seguridad: Sin opción de desactivar](capturas/04-security-sin-opcion-desactivar.md)
+*Captura omitida por seguridad: Sin opción de desactivar*
 
 Consecuencia: antes de crear nada propio, la distribución ya tenía asociada una Web ACL
 llamada `<AWS_MANAGED_WEB_ACL_NAME>` con 3 reglas.
 
-[Captura omitida por seguridad: Web ACL heredada](capturas/06-acl-heredada-createdbycloudfront.md)
+*Captura omitida por seguridad: Web ACL heredada*
 
 > **Lectura defensiva.** Un entorno "sin WAF" ya no existe por defecto en CloudFront.
 > Cualquier medición de línea base tiene que declarar qué protecciones base estaban
@@ -128,7 +128,7 @@ llamada `<AWS_MANAGED_WEB_ACL_NAME>` con 3 reglas.
 Ejecutado desde CloudShell contra la distribución, con los payloads codificados en URL
 para que bash no los altere antes de enviarlos.
 
-[Captura omitida por seguridad: Medición de línea base](capturas/07-linea-base-cloudshell.md)
+*Captura omitida por seguridad: Medición de línea base*
 
 | # | Ataque | Código | Lectura |
 |---|---|---|---|
@@ -168,7 +168,7 @@ regla. Se cambió la firma a `nikto`, verificando primero que no estuviera cubie
 
 La consola ofrece tres paquetes prearmados. Se descartaron los dos primeros.
 
-[Captura omitida por seguridad: Comparativa de paquetes y costos](capturas/09-comparativa-costos-paquetes.md)
+*Captura omitida por seguridad: Comparativa de paquetes y costos*
 
 | Paquete | Costo estimado | Motivo del descarte |
 |---|---|---|
@@ -182,11 +182,11 @@ produjo un 403, y la tabla de resultados pierde sentido.
 Categorías declaradas: comercio electrónico + servicios de API. Se descartaron las otras
 cuatro que la consola preseleccionaba, para reducir la superficie de falsos positivos.
 
-[Captura omitida por seguridad: Categorías de aplicación](capturas/08-categorias-aplicacion.md)
+*Captura omitida por seguridad: Categorías de aplicación*
 
 ### Reglas configuradas
 
-[Captura omitida por seguridad: Reglas y orden final](capturas/14-acl-cinco-reglas-orden.md)
+*Captura omitida por seguridad: Reglas y orden final*
 
 | Prioridad | Regla | Tipo | Acción | WCU | Por qué |
 |---|---|---|---|---|---|
@@ -196,10 +196,10 @@ cuatro que la consola preseleccionaba, para reducir la superficie de falsos posi
 | 4 | `AWSManagedRulesKnownBadInputsRuleSet` | Administrada | Block | 200 | Payloads maliciosos conocidos |
 | 5 | `AWSManagedRulesSQLiRuleSet` | Administrada | Block | 200 | Respuesta directa al 500 de la línea base |
 
-[Captura omitida por seguridad: Core rule set — 700 WCU](capturas/10-core-rule-set-700wcu.md)
-[Captura omitida por seguridad: Los tres grupos administrados](capturas/11-tres-grupos-administrados.md)
-[Captura omitida por seguridad: Regla rate-based](capturas/12-regla-tasa.md)
-[Captura omitida por seguridad: Regla de User-Agent](capturas/13-regla-user-agent-nikto.md)
+*Captura omitida por seguridad: Core rule set — 700 WCU*
+*Captura omitida por seguridad: Los tres grupos administrados*
+*Captura omitida por seguridad: Regla rate-based*
+*Captura omitida por seguridad: Regla de User-Agent*
 
 **Sobre el orden.** En AWS WAF gana la primera regla que coincide, y es la que queda
 registrada como `terminatingRuleId`. Poniendo las propias por delante de las administradas,
@@ -209,7 +209,7 @@ los logs atribuyen correctamente los bloqueos que originan ellas.
 700. Es un límite técnico, independiente del presupuesto: no se pueden encender grupos de
 forma indiscriminada aunque haya dinero para pagarlos.
 
-[Captura omitida por seguridad: Web ACL creada](capturas/15-acl-creada.md)
+*Captura omitida por seguridad: Web ACL creada*
 
 ---
 
@@ -222,8 +222,8 @@ explícito:
 > `You can't remove or replace the web ACL for your distribution.`
 > `Distributions with a pricing plan subscription must have a web ACL resource.`
 
-[Captura omitida por seguridad: Restricción del plan Free](capturas/16-plan-free-bloquea-desvinculacion.md)
-[Captura omitida por seguridad: Panel reportando cero recursos](capturas/17-no-hay-recursos-vinculados.md)
+*Captura omitida por seguridad: Restricción del plan Free*
+*Captura omitida por seguridad: Panel reportando cero recursos*
 
 Una distribución solo admite **una** Web ACL. En el plan Free, esa plaza la ocupa de forma
 permanente la ACL que CloudFront crea sola, y no se puede desvincular ni sustituir. La ACL

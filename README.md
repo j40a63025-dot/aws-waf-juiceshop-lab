@@ -1,22 +1,27 @@
-# AWS WAF sobre OWASP Juice Shop — laboratorio de defensa en el borde
+# EdgeGuard
 
-> **Edición anonimizada.** Los identificadores son placeholders y las capturas originales se excluyeron. Consulte [SANITIZACION.md](SANITIZACION.md) antes de reutilizar los ejemplos.
+Caso de estudio sobre protección de aplicaciones web con AWS WAF. Desplegué OWASP Juice Shop en un laboratorio aislado y comparé respuestas HTTP y registros del WAF antes y después de asociar la protección al balanceador.
 
+**Qué implementé.** Una arquitectura con Application Load Balancer, AWS WAF y una instancia EC2 que ejecutaba el contenedor de la aplicación. Combiné reglas administradas con reglas propias y validé su comportamiento con tráfico del laboratorio.
 
-Despliegue de una aplicación deliberadamente vulnerable detrás de AWS WAF, con medición
-antes/después, análisis de logs y búsqueda de falsos positivos.
+**Qué comprobé.** La navegación de control conservó el estado `200`. Las solicitudes de prueba seleccionadas llegaron a `403` tras aplicar las reglas correspondientes. Los registros permitieron identificar un falso positivo de una regla propia sobre el flujo del carrito. El costo documentado fue inferior a 3 USD y los recursos se eliminaron el mismo día.
 
-El objetivo no era "activar un WAF". Era comprobar, con evidencia, **qué bloquea realmente,
-qué deja pasar, y qué rompe** — incluyendo el caso en que la regla que rompe la aplicación
-es la que escribí yo.
+[Resultados medidos](#resultados) · [Arquitectura](#arquitectura) · [Bitácora](notas.md) · [Sanitización](SANITIZACION.md)
 
-- **Fecha:** septiembre de 2026 · **Región:** `<AWS_REGION>` (región anonimizada)
-- **Costo total:** por debajo de 3 USD, recursos destruidos el mismo día
-- **Edición pública anonimizada: capturas originales excluidas por seguridad**
+```mermaid
+flowchart LR
+    U["Tráfico del laboratorio"] --> A["Application Load Balancer"]
+    W["AWS WAF · Web ACL"] -. Evalúa solicitudes .-> A
+    A --> E["EC2 · aplicación en Docker"]
+    W --> L["Registros del WAF"]
+    L --> R["Validación de reglas y falsos positivos"]
+```
 
----
+> Evidencia histórica anonimizada de septiembre de 2026. El repositorio conserva el informe y la bitácora. Las imágenes originales se excluyeron durante la sanitización.
 
 ## Resultados
+
+![Respuestas HTTP registradas antes y después de habilitar AWS WAF](resultados-waf.png)
 
 Línea base medida **sin ninguna protección**, sobre la arquitectura final, antes de asociar
 la Web ACL. Cada payload se envió codificado en URL para que el shell no lo alterara.
@@ -29,7 +34,7 @@ la Web ACL. Cada payload se envió codificado en URL para que el shell no lo alt
 | 4 | Path traversal | `/etc/passwd../` | 200 | **403** | `KnownBadInputs` / `CommonRuleSet` |
 | 5 | User-Agent de escáner | `nikto/2.5` | 200 | **403** | `<AWS_USER_AGENT_RULE_NAME>` |
 
-[Captura omitida por seguridad: Línea base sin WAF](capturas/07-linea-base-cloudshell.md)
+*Captura omitida por seguridad: Línea base sin WAF*
 
 **El caso 2 es el que importa.** Sin WAF, la inyección no devolvía un 200 inocuo: devolvía
 **500**. Eso significa que la consulta llegó al backend y la base de datos falló al
@@ -68,7 +73,7 @@ patrón más extendido en aplicaciones de negocio.
 | 4 | `AWSManagedRulesKnownBadInputsRuleSet` | Administrada | Block | 200 | Payloads maliciosos conocidos |
 | 5 | `AWSManagedRulesSQLiRuleSet` | Administrada | Block | 200 | Respuesta directa al 500 de la línea base |
 
-[Captura omitida por seguridad: Reglas y orden](capturas/14-acl-cinco-reglas-orden.md)
+*Captura omitida por seguridad: Reglas y orden*
 
 **Sobre el orden.** En AWS WAF gana la primera regla que coincide, y es la que queda
 registrada como `terminatingRuleId`. Las reglas propias van por delante de las administradas
@@ -100,7 +105,7 @@ El asistente de creación de CloudFront incluye un paso de seguridad que, con to
 toggles de reglas apagados, deja igualmente `Security protections: Enabled`. Al intentar
 editarlo después, **no existe opción para desactivarlo**.
 
-[Captura omitida por seguridad: Sin opción de desactivar](capturas/04-security-sin-opcion-desactivar.md)
+*Captura omitida por seguridad: Sin opción de desactivar*
 
 Consecuencia: la distribución ya tenía asociada una Web ACL propia de AWS con tres reglas
 (`AmazonIpReputationList`, `CommonRuleSet`, `KnownBadInputs`) antes de crear nada.
@@ -110,7 +115,7 @@ Al crear la ACL propia y tratar de asociarla:
 > `You can't remove or replace the web ACL for your distribution.`
 > `Distributions with a pricing plan subscription must have a web ACL resource.`
 
-[Captura omitida por seguridad: Restricción del plan Free](capturas/16-plan-free-bloquea-desvinculacion.md)
+*Captura omitida por seguridad: Restricción del plan Free*
 
 Una distribución admite **una sola** Web ACL. En el plan Free esa plaza está ocupada de
 forma permanente. Además, las reglas personalizadas quedan limitadas a inspección de
@@ -128,7 +133,7 @@ Con esas limitaciones el laboratorio era imposible. De ahí la migración a ALB.
 Tras crear la ACL propia, el banner superior confirmaba la asociación mientras el panel de
 recursos mostraba **"No hay recursos vinculados"**.
 
-[Captura omitida por seguridad: Panel reportando cero recursos](capturas/17-no-hay-recursos-vinculados.md)
+*Captura omitida por seguridad: Panel reportando cero recursos*
 
 Un `curl` con el User-Agent de escáner devolvió 403, y esa señal aislada se interpretó como
 prueba de que la regla propia estaba activa. **Era incorrecto.** La batería completa lo
@@ -272,7 +277,7 @@ reglas a mano en lugar de aceptar los paquetes sugeridos por la consola (59 y 44
 redujo el costo a una fracción y, más importante, evitó reglas en modo `Count` que habrían
 hecho inatribuible cualquier bloqueo.
 
-[Captura omitida por seguridad: Comparativa de paquetes](capturas/09-comparativa-costos-paquetes.md)
+*Captura omitida por seguridad: Comparativa de paquetes*
 
 ---
 
@@ -301,7 +306,6 @@ documentarlo— es parte del trabajo.
 ```
 README.md      este informe
 notas.md       bitácora cruda de la ejecución, con lo que salió mal y por qué
-capturas/      notas de las 18 capturas omitidas por seguridad
 SANITIZACION.md resumen y alcance de la anonimización
 .gitignore     exclusiones preventivas para datos sensibles
 ```

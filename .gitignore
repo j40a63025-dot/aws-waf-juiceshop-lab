@@ -25,6 +25,7 @@ logs/
 # Original archives and screenshots may expose account/session information
 *.zip
 *.png
+!/resultados-waf.png
 *.jpg
 *.jpeg
 *.webp
